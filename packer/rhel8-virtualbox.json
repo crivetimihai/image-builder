@@ -1,0 +1,87 @@
+{
+  "variables": {
+    "vm_name": "rhel8base",
+    "iso_url": "../../iso/rhel-8.0-x86_64-dvd.iso",
+    "iso_sha256": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
+    "vm_version": "1.0",
+    "vm_description": "Mihai's RHEL 8 template"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "format": "ova",
+      "export_opts":
+      [
+        "--manifest",
+        "--vsys", "0",
+        "--description", "{{user `vm_description`}}",
+        "--version", "{{user `vm_version`}}"
+      ],
+      "guest_os_type": "RedHat_64",
+      "disk_size": 40960,
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--cpus", "2"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--pae", "on"],
+        ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
+        ["modifyvm", "{{.Name}}", "--bioslogodisplaytime", "1"],
+        ["modifyvm", "{{.Name}}", "--usb", "off"],
+        ["modifyvm", "{{.Name}}", "--usbehci", "off"]
+      ],
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_sha256`}}",
+      "iso_checksum_type": "sha256",
+      "output_directory": "builds/",
+      "shutdown_command": "sudo systemctl poweroff",
+      "http_directory": "http",
+      "ssh_username": "root",
+      "ssh_password": "vagrant",
+      "ssh_timeout": "15m",
+      "vm_name": "{{user `vm_name`}}",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<up><wait><tab> text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/rhel8-minimal-ks.cfg net.ifnames=0<enter><wait>"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'vagrant ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vagrant",
+        "mkdir /home/vagrant/.ssh",
+        "chmod 700 /home/vagrant/.ssh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "files/vagrant.pub",
+      "destination": "/home/vagrant/.ssh/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chown -R vagrant: /home/vagrant",
+        "chmod 600 /home/vagrant/.ssh/authorized_keys"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "provisioners/cleanup.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "compression_level": 1,
+      "output": "builds/{{.Provider}}-{{user `vm_name`}}.box",
+      "keep_input_artifact": true,
+      "override": {
+        "vmware": {
+          "compression_level": 0
+        }
+      }
+    }
+  ]
+}

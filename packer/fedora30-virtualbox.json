@@ -1,0 +1,83 @@
+{
+  "variables": {
+    "vm_name": "fedora30",
+    "iso_url": "../../iso/Fedora-Server-dvd-x86_64-30-1.2.iso",
+    "iso_sha256": "bb0622b78449298e24a96b90b561b429edec71aae72b8f7a8c3da4d81e4df5b7",
+    "vm_version": "1.0",
+    "vm_description": "Mihai's Fedora 30 Template"
+  },
+  "builders": [
+    {
+      "type": "virtualbox-iso",
+      "format": "ova",
+      "export_opts":
+      [
+        "--manifest",
+        "--vsys", "0",
+        "--description", "{{user `vm_description`}}",
+        "--version", "{{user `vm_version`}}"
+      ],
+      "guest_os_type": "Fedora_64",
+      "disk_size": 40960,
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "4096"],
+        ["modifyvm", "{{.Name}}", "--cpus", "4"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--pae", "on"],
+        ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
+        ["modifyvm", "{{.Name}}", "--bioslogodisplaytime", "1"],
+        ["modifyvm", "{{.Name}}", "--usb", "off"],
+        ["modifyvm", "{{.Name}}", "--usbehci", "off"]
+      ],
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_sha256`}}",
+      "iso_checksum_type": "sha256",
+      "output_directory": "builds/",
+      "shutdown_command": "sudo systemctl poweroff",
+      "http_directory": "http",
+      "ssh_username": "root",
+      "ssh_password": "vagrant",
+      "ssh_timeout": "15m",
+      "vm_name": "{{user `vm_name`}}",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<up><wait><tab> text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora30-minimal-ks.cfg net.ifnames=0<enter><wait>"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "echo 'vagrant ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vagrant",
+        "mkdir /home/vagrant/.ssh",
+        "chmod 700 /home/vagrant/.ssh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "files/vagrant.pub",
+      "destination": "/home/vagrant/.ssh/authorized_keys"
+    },
+    {
+      "type": "shell",
+      "inline": [
+        "chown -R vagrant: /home/vagrant",
+        "chmod 600 /home/vagrant/.ssh/authorized_keys"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "provisioners/cleanup.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "compression_level": 9,
+      "output": "builds/{{.Provider}}-{{user `vm_name`}}.box",
+      "vagrantfile_template": "files/Vagrantfile-fedora",
+      "keep_input_artifact": true
+    }
+  ]
+}

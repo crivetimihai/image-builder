@@ -1,0 +1,9 @@
+.vagrant
+iso/
+*.iso
+.box
+.ova
+packer/builds.old/
+packer/builds/
+.DS_Store
+packer/packer_cache/
