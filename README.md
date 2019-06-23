@@ -15,12 +15,20 @@ Prereq
 3. Optionally, install `ansible`. Builds are designed to use `ansible-local`, but you can change to use `ansible` in `Vagrantfile`.
 
 
-Typical Commands
-----------------
+Build commands
+--------------
 
 ```bash
-make -j 5 libvirt                 # Execute 5 builds of libvirt, in parallel
-packer build fedora30base.json    # Build a Fedora 30 image
+# Parallel builds
+make clean
+make -j 10 libvirt vmware; make -j 5 virtualbox
+```
+
+Packer and Vagrant
+------------------
+
+```
+packer build fedora30base.json    # Build a Fedora 30 image manually
 vagrant box list                  # List current boxes
 vagrant box remove fedora 30      # Cleanup old box
 vagrant box add --name fedora30 builds/virtualbox-fedora30.box # Add the new box
