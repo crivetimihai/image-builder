@@ -1,8 +1,12 @@
 OS Image Builder
 ================
 
+> Images on: https://app.vagrantup.com/cmihai
+
 - Packer builds base OS images (RHEL/Fedora) from Kickstart and outputs VirtualBox/Vagrant Box/KVM/VMware images.
 - Vagrant calls Ansible scripts to perform post-provisioning tasks.
+
+Currently supports Vagrant box and images (VirtualBox, VMware and KVM) for RHEL 8, CentOS 7, Fedora 30, Ubuntu 18.04, Alpine 3.10.
 
 Prereq
 ------
@@ -46,15 +50,20 @@ TODO
 3. CI/CD build
 4. Post-base image scripts (ansible)
 
+
 Add Images
 ----------
+
 - Debian
 - CoreOS
 - SuSE
 - OpenBSD
 - Raspbian
 
+
 Fixme
 -----
+
 1. Fix broken build vmware-ubuntu-18.04-base
 2. Add iso_download_url variables to all images
+3. Fix parallel builds: when VirtualBox is running, KVM qemu won't run https://bugzilla.redhat.com/show_bug.cgi?id=1277744
