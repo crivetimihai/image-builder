@@ -32,7 +32,7 @@
       "iso_url": "{{user `iso_url`}}",
       "iso_checksum": "{{user `iso_sha256`}}",
       "iso_checksum_type": "sha256",
-      "output_directory": "builds/",
+      "output_directory": "builds/{{user `vm_name`}}",
       "shutdown_command": "sudo systemctl poweroff",
       "http_directory": "http",
       "ssh_username": "root",
@@ -74,14 +74,9 @@
   "post-processors": [
     {
       "type": "vagrant",
-      "compression_level": 1,
-      "output": "builds/{{.Provider}}-{{user `vm_name`}}.box",
-      "keep_input_artifact": true,
-      "override": {
-        "vmware": {
-          "compression_level": 0
-        }
-      }
+      "compression_level": 9,
+      "output": "builds/{{user `vm_name`}}/{{.Provider}}-{{user `vm_name`}}.box",
+      "keep_input_artifact": true
     }
   ]
 }
