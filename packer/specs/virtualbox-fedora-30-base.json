@@ -1,10 +1,11 @@
 {
   "variables": {
-    "vm_name": "centos7base",
-    "iso_url": "../../iso/CentOS-7-x86_64-DVD-1810.iso",
-    "iso_sha256": "6d44331cc4f6c506c7bbe9feb8468fad6c51a88ca1393ca6b8b486ea04bec3c1",
+    "vm_name": "fedora-30-base",
+    "vm_build": "virtualbox",
+    "iso_url": "../../iso/Fedora-Server-dvd-x86_64-30-1.2.iso",
+    "iso_sha256": "bb0622b78449298e24a96b90b561b429edec71aae72b8f7a8c3da4d81e4df5b7",
     "vm_version": "1.0",
-    "vm_description": "Mihai's CentOS 7 template"
+    "vm_description": "Mihai's Fedora 30 Template - VirtualBox"
   },
   "builders": [
     {
@@ -17,11 +18,11 @@
         "--description", "{{user `vm_description`}}",
         "--version", "{{user `vm_version`}}"
       ],
-      "guest_os_type": "RedHat_64",
+      "guest_os_type": "Fedora_64",
       "disk_size": 40960,
       "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--memory", "2048"],
-        ["modifyvm", "{{.Name}}", "--cpus", "2"],
+        ["modifyvm", "{{.Name}}", "--memory", "4096"],
+        ["modifyvm", "{{.Name}}", "--cpus", "4"],
         ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--pae", "on"],
         ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
@@ -32,20 +33,26 @@
       "iso_url": "{{user `iso_url`}}",
       "iso_checksum": "{{user `iso_sha256`}}",
       "iso_checksum_type": "sha256",
-      "output_directory": "builds/{{user `vm_name`}}",
+      "output_directory": "builds/{{user `vm_build`}}-{{user `vm_name`}}",
       "shutdown_command": "sudo systemctl poweroff",
       "http_directory": "http",
       "ssh_username": "root",
       "ssh_password": "vagrant",
-      "ssh_timeout": "15m",
-      "vm_name": "{{user `vm_name`}}",
+      "ssh_timeout": "20m",
+      "vm_name": "{{user `vm_build`}}-{{user `vm_name`}}",
       "boot_wait": "5s",
       "boot_command": [
-        "<up><wait><tab> text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos7-minimal-ks.cfg net.ifnames=0<enter><wait>"
+        "<up><wait><tab>",
+        " text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora30-minimal-ks.cfg net.ifnames=0",
+        "<enter><wait>"
       ]
     }
   ],
   "provisioners": [
+    {
+      "type": "shell",
+      "script": "provisioners/VirtualBoxAdditions.sh"
+    },
     {
       "type": "shell",
       "script": "provisioners/cleanup.sh"
@@ -54,8 +61,9 @@
   "post-processors": [
     {
       "type": "vagrant",
+      "vagrantfile_template": "files/Vagrantfile.template",
       "compression_level": 9,
-      "output": "builds/{{user `vm_name`}}/{{.Provider}}-{{user `vm_name`}}.box",
+      "output": "builds/{{user `vm_build`}}-{{user `vm_name`}}/{{user `vm_build`}}-{{user `vm_name`}}.box",
       "keep_input_artifact": true
     }
   ]

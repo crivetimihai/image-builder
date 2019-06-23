@@ -1,10 +1,11 @@
 {
   "variables": {
-    "vm_name": "fedora30",
-    "iso_url": "../../iso/Fedora-Server-dvd-x86_64-30-1.2.iso",
-    "iso_sha256": "bb0622b78449298e24a96b90b561b429edec71aae72b8f7a8c3da4d81e4df5b7",
+    "vm_name": "rhel-8-base",
+    "vm_build": "virtualbox",
+    "iso_url": "../../iso/rhel-8.0-x86_64-dvd.iso",
+    "iso_sha256": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
     "vm_version": "1.0",
-    "vm_description": "Mihai's Fedora 30 Template"
+    "vm_description": "Mihai's RHEL 8 template - VirtualBox"
   },
   "builders": [
     {
@@ -17,11 +18,11 @@
         "--description", "{{user `vm_description`}}",
         "--version", "{{user `vm_version`}}"
       ],
-      "guest_os_type": "Fedora_64",
+      "guest_os_type": "RedHat_64",
       "disk_size": 40960,
       "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--memory", "4096"],
-        ["modifyvm", "{{.Name}}", "--cpus", "4"],
+        ["modifyvm", "{{.Name}}", "--memory", "2048"],
+        ["modifyvm", "{{.Name}}", "--cpus", "2"],
         ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--pae", "on"],
         ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
@@ -32,39 +33,25 @@
       "iso_url": "{{user `iso_url`}}",
       "iso_checksum": "{{user `iso_sha256`}}",
       "iso_checksum_type": "sha256",
-      "output_directory": "builds/{{user `vm_name`}}",
+      "output_directory": "builds/{{user `vm_build`}}-{{user `vm_name`}}",
       "shutdown_command": "sudo systemctl poweroff",
       "http_directory": "http",
       "ssh_username": "root",
       "ssh_password": "vagrant",
-      "ssh_timeout": "15m",
-      "vm_name": "{{user `vm_name`}}",
+      "ssh_timeout": "20m",
+      "vm_name": "{{user `vm_build`}}-{{user `vm_name`}}",
       "boot_wait": "5s",
       "boot_command": [
-        "<up><wait><tab> text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/fedora30-minimal-ks.cfg net.ifnames=0<enter><wait>"
+        "<up><wait><tab>",
+        " text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/rhel8-minimal-ks.cfg net.ifnames=0",
+        "<enter><wait>"
       ]
     }
   ],
   "provisioners": [
     {
       "type": "shell",
-      "inline": [
-        "echo 'vagrant ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vagrant",
-        "mkdir /home/vagrant/.ssh",
-        "chmod 700 /home/vagrant/.ssh"
-      ]
-    },
-    {
-      "type": "file",
-      "source": "files/vagrant.pub",
-      "destination": "/home/vagrant/.ssh/authorized_keys"
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "chown -R vagrant: /home/vagrant",
-        "chmod 600 /home/vagrant/.ssh/authorized_keys"
-      ]
+      "script": "provisioners/VirtualBoxAdditions.sh"
     },
     {
       "type": "shell",
@@ -74,9 +61,9 @@
   "post-processors": [
     {
       "type": "vagrant",
+      "vagrantfile_template": "files/Vagrantfile.template",
       "compression_level": 9,
-      "output": "builds/{{user `vm_name`}}/{{.Provider}}-{{user `vm_name`}}.box",
-      "vagrantfile_template": "files/Vagrantfile-fedora",
+      "output": "builds/{{user `vm_build`}}-{{user `vm_name`}}/{{user `vm_build`}}-{{user `vm_name`}}.box",
       "keep_input_artifact": true
     }
   ]

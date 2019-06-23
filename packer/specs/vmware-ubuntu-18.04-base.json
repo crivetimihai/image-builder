@@ -1,0 +1,97 @@
+{
+  "variables": {
+    "vm_name": "ubuntu-18.04-base",
+    "vm_build": "vmware",
+    "iso_local_url": "../../iso/ubuntu-18.04.2-server-amd64.iso", 
+    "iso_download_url": "http://cdimage.ubuntu.com/ubuntu/releases/bionic/release/ubuntu-18.04.2-server-amd64.iso",
+    "iso_sha256": "a2cb36dc010d98ad9253ea5ad5a07fd6b409e3412c48f1860536970b073c98f5",
+    "vm_version": "1.0",
+    "vm_description": "Mihai's Ubuntu 18.04 template - VMware"
+  },
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "guest_os_type": "ubuntu-64",
+      "vmdk_name": "ubuntu1804",
+      "disk_size": 40960,
+      "disk_type_id": 0,
+      "network": "nat",
+      "vmx_data": {
+        "memsize": "4096",
+        "numvcpus": "2",
+        "ethernet0.present": true,
+        "ethernet0.startConnected": true,
+        "ethernet0.connectionType": "custom",
+        "ethernet0.vnet": "vmnet8",
+        "ethernet1.present": true,
+        "ethernet1.startConnected": true,
+        "ethernet1.connectionType": "custom",
+        "ethernet1.vnet": "vmnet1"
+      },
+      "iso_urls": [
+        "{{user `iso_local_url`}}",
+        "{{user `iso_download_url`}}"
+      ],
+      "iso_checksum": "{{user `iso_sha256`}}",
+      "iso_checksum_type": "sha256",
+      "output_directory": "builds/{{user `vm_build`}}-{{user `vm_name`}}",
+      "shutdown_command": "sudo systemctl poweroff",
+      "http_directory": "http",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_timeout": "20m",
+      "vm_name": "{{user `vm_build`}}-{{user `vm_name`}}.qcow2",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<esc><wait>",
+        "<esc><wait>",
+        "<enter><wait>",
+        "/install/vmlinuz",
+        " auto=true",
+        " console-setup/ask_detect=false",
+        " console-setup/layoutcode=us",
+        " console-setup/modelcode=pc105",
+        " debconf/frontend=noninteractive",
+        " debian-installer=en_US",
+        " fb=false",
+        " initrd=/install/initrd.gz",
+        " kbd-chooser/method=us",
+        " keyboard-configuration/layout=USA",
+        " keyboard-configuration/variant=USA",
+        " locale=en_US",
+        " netcfg/get_domain=vm",
+        " netcfg/get_hostname=vagrant",
+        " grub-installer/bootdev=/dev/sda",
+        " noapic",
+        " preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/ubuntu-18.04-minimal-preseed.cfg",
+        " -- <wait>",
+        "<enter><wait>"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "provisioners/setup-ubuntu.sh"
+    },
+    {
+        "type": "shell",
+        "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+        "script": "provisioners/VMware-Tools.sh"
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "provisioners/clean-ubuntu.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "compression_level": 9,
+      "output": "builds/{{user `vm_build`}}-{{user `vm_name`}}/{{user `vm_build`}}-{{user `vm_name`}}.box",
+      "keep_input_artifact": true
+    }
+  ]
+}

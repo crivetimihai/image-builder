@@ -1,16 +1,5 @@
 #!/bin/bash
 
-# Mount image
-mkdir /tmp/iso
-mount -t iso9660 -o loop /root/VBoxGuestAdditions.iso /tmp/iso
-
-# Install additions
-/tmp/iso/VBoxLinuxAdditions.run
-
-# Cleanup
-umount /tmp/iso
-rm -rf /tmp/iso /root/VBoxGuestAdditions.iso
-
 # Grub interface names
 sed -i 's/rhgb quiet/net.ifnames=0/' /etc/default/grub
 
@@ -30,6 +19,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 
 # Cleanup
 package-cleanup -y --oldkernels --count=1
+# FIXME: package-cleanup has to be executed with one of the options: --dupes, --leaves, --orphans, --problems or --cleandupes
 yum -y remove yum-utils
 yum -y autoremove
 yum clean all

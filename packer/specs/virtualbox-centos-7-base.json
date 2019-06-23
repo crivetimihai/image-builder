@@ -1,10 +1,11 @@
 {
   "variables": {
-    "vm_name": "rhel8base",
-    "iso_url": "../../iso/rhel-8.0-x86_64-dvd.iso",
-    "iso_sha256": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
+    "vm_name": "centos-7-base",
+    "vm_build": "virtualbox",
+    "iso_url": "../../iso/CentOS-7-x86_64-DVD-1810.iso",
+    "iso_sha256": "6d44331cc4f6c506c7bbe9feb8468fad6c51a88ca1393ca6b8b486ea04bec3c1",
     "vm_version": "1.0",
-    "vm_description": "Mihai's RHEL 8 template"
+    "vm_description": "Mihai's CentOS 7 template - VirtualBox"
   },
   "builders": [
     {
@@ -32,39 +33,25 @@
       "iso_url": "{{user `iso_url`}}",
       "iso_checksum": "{{user `iso_sha256`}}",
       "iso_checksum_type": "sha256",
-      "output_directory": "builds/{{user `vm_name`}}",
+      "output_directory": "builds/{{user `vm_build`}}-{{user `vm_name`}}",
       "shutdown_command": "sudo systemctl poweroff",
       "http_directory": "http",
       "ssh_username": "root",
       "ssh_password": "vagrant",
-      "ssh_timeout": "15m",
-      "vm_name": "{{user `vm_name`}}",
+      "ssh_timeout": "20m",
+      "vm_name": "{{user `vm_build`}}-{{user `vm_name`}}",
       "boot_wait": "5s",
       "boot_command": [
-        "<up><wait><tab> text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/rhel8-minimal-ks.cfg net.ifnames=0<enter><wait>"
+        "<up><wait><tab>",
+        " text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos7-minimal-ks.cfg net.ifnames=0",
+        "<enter><wait>"
       ]
     }
   ],
   "provisioners": [
     {
       "type": "shell",
-      "inline": [
-        "echo 'vagrant ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/vagrant",
-        "mkdir /home/vagrant/.ssh",
-        "chmod 700 /home/vagrant/.ssh"
-      ]
-    },
-    {
-      "type": "file",
-      "source": "files/vagrant.pub",
-      "destination": "/home/vagrant/.ssh/authorized_keys"
-    },
-    {
-      "type": "shell",
-      "inline": [
-        "chown -R vagrant: /home/vagrant",
-        "chmod 600 /home/vagrant/.ssh/authorized_keys"
-      ]
+      "script": "provisioners/VirtualBoxAdditions.sh"
     },
     {
       "type": "shell",
@@ -74,8 +61,9 @@
   "post-processors": [
     {
       "type": "vagrant",
+      "vagrantfile_template": "files/Vagrantfile.template",
       "compression_level": 9,
-      "output": "builds/{{user `vm_name`}}/{{.Provider}}-{{user `vm_name`}}.box",
+      "output": "builds/{{user `vm_build`}}-{{user `vm_name`}}/{{user `vm_build`}}-{{user `vm_name`}}.box",
       "keep_input_artifact": true
     }
   ]

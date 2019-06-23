@@ -1,0 +1,67 @@
+{
+  "variables": {
+    "vm_name": "rhel-8-base",
+    "vm_build": "vmware",
+    "iso_url": "../../iso/rhel-8.0-x86_64-dvd.iso",
+    "iso_sha256": "005d4f88fff6d63b0fc01a10822380ef52570edd8834321de7be63002cc6cc43",
+    "vm_version": "1.0",
+    "vm_description": "Mihai's RHEL 8 template - VMware"
+  },
+  "builders": [
+    {
+      "type": "vmware-iso",
+      "guest_os_type": "rhel8-64",
+      "vmdk_name": "rhel8",
+      "disk_size": 40960,
+      "disk_type_id": 0,
+      "network": "nat",
+      "vmx_data": {
+        "memsize": "4096",
+        "numvcpus": "2",
+        "ethernet0.present": true,
+        "ethernet0.startConnected": true,
+        "ethernet0.connectionType": "custom",
+        "ethernet0.vnet": "vmnet8",
+        "ethernet1.present": true,
+        "ethernet1.startConnected": true,
+        "ethernet1.connectionType": "custom",
+        "ethernet1.vnet": "vmnet1"
+      },
+      "iso_url": "{{user `iso_url`}}",
+      "iso_checksum": "{{user `iso_sha256`}}",
+      "iso_checksum_type": "sha256",
+      "output_directory": "builds/{{user `vm_build`}}-{{user `vm_name`}}",
+      "shutdown_command": "sudo systemctl poweroff",
+      "http_directory": "http",
+      "ssh_username": "root",
+      "ssh_password": "vagrant",
+      "ssh_timeout": "20m",
+      "vm_name": "{{user `vm_build`}}-{{user `vm_name`}}",
+      "boot_wait": "5s",
+      "boot_command": [
+        "<up><wait><tab>",
+        " text inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/rhel8-minimal-ks.cfg net.ifnames=0",
+        "<enter><wait>"
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "script": "provisioners/VMware-Tools.sh"
+    },
+    {
+      "type": "shell",
+      "script": "provisioners/cleanup.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "vagrantfile_template": "files/Vagrantfile.template",
+      "compression_level": 9,
+      "output": "builds/{{user `vm_build`}}-{{user `vm_name`}}/{{user `vm_build`}}-{{user `vm_name`}}.box",
+      "keep_input_artifact": true
+    }
+  ]
+}
